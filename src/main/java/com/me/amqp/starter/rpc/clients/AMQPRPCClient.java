@@ -1,65 +1,82 @@
 package com.me.amqp.starter.rpc.clients;
 
-
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
-
-
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.MessageProperties;
-import org.springframework.stereotype.Component;
-import sun.applet.Main;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.connection.Connection;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class AMQPRPCClient {
 
-    public static byte[] rpc(final Channel ch, String queue, byte[] req)
-        throws Exception
-    {
-        final byte[][] results = new byte[1][];
-        final CountDownLatch latch = new CountDownLatch(1);
+    @Value("${amqp.service.starter.rpc.queue.name}")
+    private String RPC_QUEUE_NAME;
 
-        DefaultConsumer c = new DefaultConsumer(ch) {
-            @Override
-            public void handleDelivery(
-                    String consumerTag,
-                    Envelope envelope,
-                    AMQP.BasicProperties properties,
-                    byte[] body) throws IOException
-            {
-                results[0] = body;
-                latch.countDown();
-            }
-        };
-        String ctag = ch.basicConsume(Main.DIRECT_QUEUE, true, c);
-        System.out.printf("ctag: %s", ctag);
-        System.out.println();
+    @Value("${amqp.service.starter.rpc.queue.isDurable}")
+    private Boolean RPC_QUEUE_ISDURABLE;
 
-        AMQP.BasicProperties props = MessageProperties.MINIMAL_BASIC.
-            builder().replyTo(Main.DIRECT_QUEUE).build();
-        ch.basicPublish("", queue, props, req);
-        latch.await();
-        ch.basicCancel(ctag);
+    @Value("${amqp.service.starter.rpc.queue.exclusive}")
+    private Boolean RPC_QUEUE_EXCLUSIVE;
 
-        return results[0];
+    @Value("${amqp.service.starter.rpc.queue.autodelete}")
+    private Boolean RPC_QUEUE_AUTODELETE;
+
+    @Value("${amqp.service.starter.rpc.queue.autoack}")
+    private Boolean RPC_QUEUE_AUTOACK;
+
+    @Autowired
+    private ConnectionFactory rabbitConnectionFactory;
+
+    private static Connection connection;
+    
+    private static Channel channel;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AMQPRPCClient.class);
+
+    public AMQPRPCClient() {
+        connection = rabbitConnectionFactory.createConnection();
+        try {
+            channel = rabbitConnectionFactory.createConnection().createChannel(true);
+            channel.queueDeclare(
+                    RPC_QUEUE_NAME,
+                    RPC_QUEUE_ISDURABLE,
+                    RPC_QUEUE_EXCLUSIVE,
+                    RPC_QUEUE_AUTODELETE,
+                    null);
+
+            channel.basicQos(1);
+
+            LOGGER.info("[AMQP-service] Ready to send RPC requests in channel");
+        } catch (IOException ioe) {
+            LOGGER.error("[RPC - Client Constructor] Error handling process: {}", ioe.getMessage());
+        }
     }
 
-    public static void main(String[] args) throws Exception {
-        System.out.println("Client!");
+    public void close() throws Exception {
+        try {
+            connection.close();
+        } catch (NullPointerException npe) {
+            LOGGER.error("[RPC - Client close()] No connection to be closed: {}", npe.getMessage());
+        }
+    }
 
-        ConnectionFactory f = new ConnectionFactory();
-        f.setHost(Main.HOST);
-        Connection conn = f.newConnection();
-        final Channel ch = conn.createChannel();
+    public void sendRPCMessage( byte[] message) throws Exception {
+        try {
+            final CountDownLatch latch = new CountDownLatch(1);
 
-        byte[] resp = rpc(ch, Main.SERVER_QUEUE, "Hello server!".getBytes());
-        System.out.println(new String(resp));
+            AMQP.BasicProperties props = MessageProperties.MINIMAL_BASIC.builder().replyTo(RPC_QUEUE_NAME).build();
+            channel.basicPublish("", RPC_QUEUE_NAME, props, message);
+            latch.await();
+        } catch (IOException | InterruptedException e) {
+            LOGGER.error("[RPC - Client sendRPCMessage()] Error handling process: {}", e.getMessage());
+        }
 
-        conn.close();
     }
 }

@@ -3,6 +3,8 @@ package com.me.amqp.starter.rpc.servers;
 import com.me.amqp.starter.rpc.handlers.AMQPRPCServerHandler;
 import com.rabbitmq.client.Channel;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,9 +34,13 @@ public class AMQPRPCMainServer {
 
     @Autowired
     private ConnectionFactory rabbitConnectionFactory;
+    
+    Connection connection;
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(AMQPRPCMainServer.class);
 
     public AMQPRPCMainServer() throws Exception {
-        Connection connection = rabbitConnectionFactory.createConnection();
+        connection = rabbitConnectionFactory.createConnection();
         try {
             Channel channel = rabbitConnectionFactory.createConnection().createChannel(true);
             channel.queueDeclare(
@@ -50,15 +56,10 @@ public class AMQPRPCMainServer {
                     RPC_QUEUE_AUTOACK,
                     aMQPRPCServerHandler
             );
-            System.out.println(" [x] Awaitinchannelg RPC requests in Principal channel");
+            LOGGER.info("[AMQP-service] Awaiting RPC requests in channel");
         } catch (IOException ioe) {
             //TODO
-        } finally {
-            try {
-                connection.close();
-            } catch (NullPointerException npe) {
-                //TODO
-            }
+            LOGGER.error("[RPC - Server Constructor] Error handling process: {}", ioe.getMessage());
         }
 
         /*
@@ -95,6 +96,14 @@ public class AMQPRPCMainServer {
          Throws:
          java.io.IOException - if an error is encountered
          */
+    }
+    
+    public void close() throws Exception {
+        try {
+            connection.close();
+        } catch (NullPointerException npe) {
+            LOGGER.error("[RPC - Server close()] No connection to be closed: {}", npe.getMessage());
+        }
     }
 
 }

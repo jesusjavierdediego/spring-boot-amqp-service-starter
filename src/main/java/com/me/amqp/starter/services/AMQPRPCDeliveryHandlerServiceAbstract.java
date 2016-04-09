@@ -2,6 +2,8 @@ package com.me.amqp.starter.services;
 
 import com.rabbitmq.client.Channel;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +28,7 @@ public abstract class AMQPRPCDeliveryHandlerServiceAbstract {
     
     public byte[] invokeHandler(byte[] message, Channel channel) {
         byte[] result = RPC_MESSAGE_DEFAULT_CONTENT.getBytes();
+        final CountDownLatch latch = new CountDownLatch(1);
         try {
             Class<?> handlerClass = ClassUtils.forName(DECLARED_HANDLER_CLASS_NAME, getClass().getClassLoader());
             Method handleRPCIncomingMessage = ReflectionUtils.findMethod(handlerClass, HANDLER_METHOD_NAME);
@@ -33,8 +36,13 @@ public abstract class AMQPRPCDeliveryHandlerServiceAbstract {
             args[0] = message;
             args[1] = channel;
             result = (byte[])ReflectionUtils.invokeMethod(handleRPCIncomingMessage, null, args);
+            latch.await();
         } catch (ClassNotFoundException cnfe) {
-            //TODO
+            LOGGER.error("[RPC message handling - Abstract] Error handling process: {}", cnfe.getMessage());
+        } catch (InterruptedException ie) {
+            LOGGER.error("[RPC message handling - Abstract] Error handling process with CountDownLatch: {}", ie.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("[RPC message handling - Abstract] Error handling process: {}", e.getMessage());
         }
         
         return result;
