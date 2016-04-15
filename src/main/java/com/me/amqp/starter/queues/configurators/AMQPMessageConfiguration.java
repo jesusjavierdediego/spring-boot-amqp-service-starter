@@ -10,7 +10,6 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.amqp.support.converter.MessageConverter;
@@ -18,30 +17,10 @@ import org.springframework.amqp.support.converter.MessageConverter;
 @Configuration
 public class AMQPMessageConfiguration {
 
-    @Value("${amqp.listen.queue.name}")
-    private String LISTEN_QUEUE_NAME;
+   
     
-    @Value("${amqp.listen.queue.isDurable}")
-    private Boolean LISTEN_QUEUE_ISDURABLE;
-
-    @Value("${amqp.listen.reply.timeout}")
-    private Long LISTEN_REPLY_TIMEOUT;
-    
-    @Value("${amqp.reply.queue.name}")
-    private String REPLY_QUEUE_NAME;
-    
-    @Value("${amqp.reply.queue.isDurable}")
-    private Boolean REPLY_QUEUE_ISDURABLE;
-
-    @Value("${amqp.reply.exchange.name}")
-    private String REPLY_EXCHANGE_NAME;
-
-    @Value("${amqp.reply.routingKey.name}")
-    private String REPLY_ROUTINGKEY_NAME;
-
     @Autowired
     private ConnectionFactory rabbitConnectionFactory;
-    
     
     
     @Bean
@@ -52,41 +31,47 @@ public class AMQPMessageConfiguration {
     //QUEUES
     //Listening to:
     @Bean
-    Queue listenQueue() {
-        return new Queue(LISTEN_QUEUE_NAME, LISTEN_QUEUE_ISDURABLE);
+    Queue listenQueue(AMQPServiceProperties aMQPServiceProperties) {
+        return new Queue(
+                aMQPServiceProperties.getQueuename(), 
+                Boolean.valueOf(aMQPServiceProperties.getQueueisDurable()
+                ));
     }
     //Send replies to:
     @Bean
-    Queue replyQueue() {
-        return new Queue(REPLY_QUEUE_NAME, REPLY_QUEUE_ISDURABLE);
+    Queue replyQueue(AMQPServiceProperties aMQPServiceProperties) {
+        return new Queue(
+                aMQPServiceProperties.getReplyqueuename(), 
+                Boolean.valueOf(aMQPServiceProperties.getReplyqueueisDurable()
+                ));
     }
 
     @Bean
-    SimpleMessageListenerContainer listenContainer(ConnectionFactory connectionFactory) {
+    SimpleMessageListenerContainer listenContainer(ConnectionFactory connectionFactory, AMQPServiceProperties aMQPServiceProperties) {
         final SimpleMessageListenerContainer listenerContainer = new SimpleMessageListenerContainer();
         listenerContainer.setConnectionFactory(connectionFactory);
-        listenerContainer.setQueueNames(LISTEN_QUEUE_NAME);
+        listenerContainer.setQueueNames(aMQPServiceProperties.getQueuename());
         listenerContainer.setMessageConverter(jsonMessageConverter());
-        listenerContainer.setMessageListener(listener());
+        listenerContainer.setMessageListener(listener(aMQPServiceProperties));
         listenerContainer.setAcknowledgeMode(AcknowledgeMode.AUTO);
         return listenerContainer;
     }
 
     @Bean
-    AMQPMessageListener listener() {
-        return new AMQPMessageListener();
+    AMQPMessageListener listener(AMQPServiceProperties aMQPServiceProperties) {
+        return new AMQPMessageListener(aMQPServiceProperties);
     }
 
     @Bean
     @Qualifier("REPLYQUEUE")
     @Primary
-    public RabbitTemplate replySender() {
+    public RabbitTemplate replySender(AMQPServiceProperties aMQPServiceProperties) {
         RabbitTemplate template = new RabbitTemplate(this.rabbitConnectionFactory);
-        template.setQueue(REPLY_QUEUE_NAME);
-        template.setExchange(REPLY_EXCHANGE_NAME);
-        template.setRoutingKey(REPLY_ROUTINGKEY_NAME);
-        template.setReplyQueue(this.listenQueue());
-        template.setReplyTimeout(LISTEN_REPLY_TIMEOUT);
+        template.setQueue(aMQPServiceProperties.getReplyqueuename());
+        template.setExchange(aMQPServiceProperties.getReplyexchangename());
+        template.setRoutingKey(aMQPServiceProperties.getReplyroutingKeyname());
+        template.setReplyQueue(this.listenQueue(aMQPServiceProperties));
+        template.setReplyTimeout(Integer.valueOf(aMQPServiceProperties.getReplytimeout()));
         template.setMessageConverter(jsonMessageConverter());
         return template;
     }

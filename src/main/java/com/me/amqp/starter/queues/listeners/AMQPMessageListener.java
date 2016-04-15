@@ -1,6 +1,7 @@
 package com.me.amqp.starter.queues.listeners;
 
 
+import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
 import com.me.amqp.starter.services.AMQPMessageHandlerServiceAbstract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,17 +14,11 @@ import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class AMQPMessageListener implements ChannelAwareMessageListener {
     
-    @Value("${amqp.service.starter.rpc.message.default.content}")
-    private String OPERATION_HEADER;
-    
-    @Value("${amqp.service.starter.rpc.message.default.content}")
-    private String CHANNEL_HEADER;
     
     @Autowired
     MessageConverter jsonMessageConverter;
@@ -34,8 +29,15 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
     @Autowired
     RabbitTemplate replySender;
     
+    
+    private AMQPServiceProperties configuration;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AMQPMessageListener.class);
     
+    @Autowired
+    public AMQPMessageListener(AMQPServiceProperties aMQPServiceProperties){
+        configuration = aMQPServiceProperties;
+    }
 
     @Override
     public void onMessage(Message message, Channel channel) throws Exception{
@@ -47,8 +49,8 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
          * 2-Operation type
         */
         Map<String, Object> headers = message.getMessageProperties().getHeaders();
-        Entry opHeader = headers.entrySet().parallelStream().filter(e -> e.getKey().equalsIgnoreCase(OPERATION_HEADER)).findFirst().get();
-        Entry clientChannel = headers.entrySet().parallelStream().filter(e -> e.getKey().equalsIgnoreCase(CHANNEL_HEADER)).findFirst().get();
+        Entry opHeader = headers.entrySet().parallelStream().filter(e -> e.getKey().equalsIgnoreCase(configuration.getOperationheader())).findFirst().get();
+        Entry clientChannel = headers.entrySet().parallelStream().filter(e -> e.getKey().equalsIgnoreCase(configuration.getChannelheader())).findFirst().get();
         
         LOGGER.info("******************************************************************");
         LOGGER.info("Message received at: ", message.getMessageProperties().getTimestamp());
@@ -56,7 +58,7 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
         LOGGER.info("Message in channel: {}. ", clientChannel.getValue());
         
         //Invoke message handler
-        List<?> result = messageHandler.invokeHandler(message, channel);
+        List<?> result = messageHandler.invokeHandler(message);
         try{
             if(result.size() > 0){
                 result.forEach(item -> replySender.convertAndSend(item));
@@ -66,9 +68,7 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
         }catch(NullPointerException npe){
             LOGGER.error("[Queue message handling - Listener] Error accessing to null result set from concrete service.");
         }
-        
         LOGGER.info("******************************************************************");
-        
     }
     
 

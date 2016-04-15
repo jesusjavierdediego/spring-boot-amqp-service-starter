@@ -1,12 +1,11 @@
 package com.me.amqp.starter.services;
 
-import com.rabbitmq.client.Channel;
+import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
@@ -14,27 +13,21 @@ import org.springframework.util.ReflectionUtils;
 @Component
 public abstract class AMQPRPCDeliveryHandlerServiceAbstract {
 
-    //Full qualified class name extending abstract class
-    @Value("${amqp.service.starter.rpc.handler.class.name}")
-    private String DECLARED_HANDLER_CLASS_NAME;
+    @Autowired
+    AMQPServiceProperties aMQPServiceProperties;
     
-    @Value("${amqp.service.starter.rpc.message.default.content}")
-    private String RPC_MESSAGE_DEFAULT_CONTENT;
-
-    //Overriden method in abstract class
-    private static final String HANDLER_METHOD_NAME = "handleRPCIncomingMessage";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AMQPRPCDeliveryHandlerServiceAbstract.class);
+
     
-    public byte[] invokeHandler(byte[] message, Channel channel) {
-        byte[] result = RPC_MESSAGE_DEFAULT_CONTENT.getBytes();
+    public byte[] invokeHandler(byte[] message) {
+        byte[] result = aMQPServiceProperties.getRpcmessagedefaultcontent().getBytes();
         final CountDownLatch latch = new CountDownLatch(1);
         try {
-            Class<?> handlerClass = ClassUtils.forName(DECLARED_HANDLER_CLASS_NAME, getClass().getClassLoader());
-            Method handleRPCIncomingMessage = ReflectionUtils.findMethod(handlerClass, HANDLER_METHOD_NAME);
+            Class<?> handlerClass = ClassUtils.forName(aMQPServiceProperties.getRpchandlerclassname(), getClass().getClassLoader());
+            Method handleRPCIncomingMessage = ReflectionUtils.findMethod(handlerClass, aMQPServiceProperties.getRpchandlerclassmethodname());
             Object[] args = new Object[2]; 
             args[0] = message;
-            args[1] = channel;
             result = (byte[])ReflectionUtils.invokeMethod(handleRPCIncomingMessage, null, args);
             latch.await();
         } catch (ClassNotFoundException cnfe) {
@@ -48,6 +41,6 @@ public abstract class AMQPRPCDeliveryHandlerServiceAbstract {
         return result;
     }
 
-    public abstract byte[] handleRPCIncomingMessage(byte[] message, Channel channel);
+    public abstract byte[] handleRPCIncomingMessage(byte[] message);
 
 }

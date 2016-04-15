@@ -1,12 +1,16 @@
 package com.me.amqp.starter.rpc.servers;
 
-import com.me.amqp.starter.rpc.handlers.AMQPRPCServerHandler;
+import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
+import com.me.amqp.starter.services.AMQPRPCDeliveryHandlerServiceAbstract;
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.amqp.rabbit.connection.Connection;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -14,49 +18,60 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 @Service
 public class AMQPRPCMainServer {
 
-    @Value("${amqp.service.starter.rpc.queue.name}")
-    private String RPC_QUEUE_NAME;
-
-    @Value("${amqp.service.starter.rpc.queue.isDurable}")
-    private Boolean RPC_QUEUE_ISDURABLE;
-
-    @Value("${amqp.service.starter.rpc.queue.exclusive}")
-    private Boolean RPC_QUEUE_EXCLUSIVE;
-
-    @Value("${amqp.service.starter.rpc.queue.autodelete}")
-    private Boolean RPC_QUEUE_AUTODELETE;
-
-    @Value("${amqp.service.starter.rpc.queue.autoack}")
-    private Boolean RPC_QUEUE_AUTOACK;
-
     @Autowired
-    AMQPRPCServerHandler aMQPRPCServerHandler;
+    AMQPRPCDeliveryHandlerServiceAbstract aMQPRPCDeliveryHandlerService;
 
-    @Autowired
-    private ConnectionFactory rabbitConnectionFactory;
-    
     Connection connection;
-    
+
+    private final CountDownLatch latch = new CountDownLatch(1);
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AMQPRPCMainServer.class);
 
-    public AMQPRPCMainServer() throws Exception {
-        connection = rabbitConnectionFactory.createConnection();
+    @Autowired
+    public AMQPRPCMainServer(ConnectionFactory connectionFactory, AMQPServiceProperties aMQPServiceProperties) {
+        connection = connectionFactory.createConnection();
         try {
-            Channel channel = rabbitConnectionFactory.createConnection().createChannel(true);
+            Channel channel = connectionFactory.createConnection().createChannel(true);
             channel.queueDeclare(
-                    RPC_QUEUE_NAME,
-                    RPC_QUEUE_ISDURABLE,
-                    RPC_QUEUE_EXCLUSIVE,
-                    RPC_QUEUE_AUTODELETE,
+                    aMQPServiceProperties.getRpcqueuename(),
+                    Boolean.valueOf(aMQPServiceProperties.getRpcqueueisDurable()),
+                    Boolean.valueOf(aMQPServiceProperties.getRpcqueueexclusive()),
+                    Boolean.valueOf(aMQPServiceProperties.getRpcqueueautodelete()),
                     null);
+
+            DefaultConsumer consumer = new DefaultConsumer(channel) {
+
+                @Override
+                public void handleDelivery(
+                        String consumerTag,
+                        Envelope envelope,
+                        AMQP.BasicProperties properties,
+                        byte[] body) throws IOException {
+                    AMQP.BasicProperties replyProps = new AMQP.BasicProperties.Builder()
+                            .correlationId(properties.getCorrelationId())
+                            .build();
+
+                    byte[] processedResult = aMQPRPCDeliveryHandlerService.invokeHandler(body);
+
+                    try {
+                        //channel.basicPublish(RPC_EXCHANGE_NAME, RPC_ROUTINGKEY_NAME, replyProps, processedResult);
+                        channel.basicPublish(aMQPServiceProperties.getRpcqueuename(), properties.getReplyTo(), replyProps, processedResult);
+                        channel.basicAck(envelope.getDeliveryTag(), false);
+                    } catch (IOException ioe) {
+                        LOGGER.error("[RPC - Server handleDelivery()] Error handling process: {}", ioe.getMessage());
+                    }
+
+                    latch.countDown();
+                }
+            };
 
             channel.basicQos(1);
             channel.basicConsume(
-                    RPC_QUEUE_NAME,
-                    RPC_QUEUE_AUTOACK,
-                    aMQPRPCServerHandler
+                    aMQPServiceProperties.getRpcqueuename(),
+                    Boolean.valueOf(aMQPServiceProperties.getRpcqueueautoack()),
+                    consumer
             );
-            LOGGER.info("[AMQP-service] Awaiting RPC requests in channel");
+            LOGGER.info("[RPC - Server Constructor] Awaiting RPC requests in channel");
         } catch (IOException ioe) {
             //TODO
             LOGGER.error("[RPC - Server Constructor] Error handling process: {}", ioe.getMessage());
@@ -97,7 +112,7 @@ public class AMQPRPCMainServer {
          java.io.IOException - if an error is encountered
          */
     }
-    
+
     public void close() throws Exception {
         try {
             connection.close();

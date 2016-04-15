@@ -1,41 +1,53 @@
 package com.me.amqp.starter;
 
 import com.me.amqp.starter.queues.configurators.AMQPMessageConfiguration;
+import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
 import com.me.amqp.starter.queues.listeners.AMQPMessageListener;
 import com.me.amqp.starter.rpc.clients.AMQPRPCClient;
 import com.me.amqp.starter.rpc.servers.AMQPRPCMainServer;
-//import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+//@ComponentScan({"com.me.amqp.starter", "com.rabbitmq"})
+@ConditionalOnProperty(prefix = "amqp.service", name = "enabled", matchIfMissing = true)
+@EnableConfigurationProperties(AMQPServiceProperties.class)
+@AutoConfigureAfter(RabbitAutoConfiguration.class)
 public class AMQPServiceAutoConfiguration {
-
+    
+       
+        @Autowired
+        private ConnectionFactory connectionFactory;
+        
+        @Autowired
+	AMQPServiceProperties aMQPServiceProperties;
         
         @Bean
-	@ConditionalOnMissingBean
 	public AMQPRPCMainServer aMQPRPCMainServer() throws Exception{
-		return new AMQPRPCMainServer();
+		return new AMQPRPCMainServer(connectionFactory, aMQPServiceProperties);
 	}
         
         @Bean
-	@ConditionalOnMissingBean
-	public AMQPRPCClient aMQPRPCClient() {
-		return new AMQPRPCClient();
+	public AMQPRPCClient aMQPRPCClient() throws Exception{
+		return new AMQPRPCClient(connectionFactory, aMQPServiceProperties);
 	}
         
         @Bean
-	@ConditionalOnMissingBean
 	public AMQPMessageConfiguration aMQPMessageConfiguration() {
 		return new AMQPMessageConfiguration();
 	}
         
         @Bean
-	@ConditionalOnMissingBean
 	public AMQPMessageListener aMQPMessageListener() {
-		return new AMQPMessageListener();
+		return new AMQPMessageListener(aMQPServiceProperties);
 	}
         
-
+        
 }
