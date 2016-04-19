@@ -37,7 +37,9 @@ public class AMQPRPCMainServer {
                     Boolean.valueOf(aMQPServiceProperties.getRpcqueueisDurable()),
                     Boolean.valueOf(aMQPServiceProperties.getRpcqueueexclusive()),
                     Boolean.valueOf(aMQPServiceProperties.getRpcqueueautodelete()),
-                    null);
+                    null
+            );
+            channel.exchangeDeclare(aMQPServiceProperties.getRpcexchangename(), "topic");
 
             DefaultConsumer consumer = new DefaultConsumer(channel) {
 
@@ -52,11 +54,11 @@ public class AMQPRPCMainServer {
                             .build();
 
                     byte[] processedResult = aMQPRPCDeliveryHandlerService.invokeHandler(body);
-
+                    LOGGER.info("Response: {}", new String(processedResult));
                     try {
-                        //channel.basicPublish(RPC_EXCHANGE_NAME, RPC_ROUTINGKEY_NAME, replyProps, processedResult);
-                        channel.basicPublish(aMQPServiceProperties.getRpcqueuename(), properties.getReplyTo(), replyProps, processedResult);
-                        channel.basicAck(envelope.getDeliveryTag(), false);
+                        channel.basicPublish(aMQPServiceProperties.getRpcexchangename(), aMQPServiceProperties.getRpcroutingKeyname(), replyProps, processedResult);
+                        //channel.basicAck(envelope.getDeliveryTag(), false);
+                        
                     } catch (IOException ioe) {
                         LOGGER.error("[RPC - Server handleDelivery()] Error handling process: {}", ioe.getMessage());
                     }

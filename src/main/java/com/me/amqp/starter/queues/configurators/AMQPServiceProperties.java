@@ -26,6 +26,8 @@ public class AMQPServiceProperties {
         private String handlerclassmethodname;
         private String rpchandlerclassmethodname;
         private String rpcmessagedefaultcontent;
+        private String rpcroutingKeyname;
+        private String rpcexchangename;
         
         private String operationheader;
         private String channelheader;
@@ -184,6 +186,22 @@ public class AMQPServiceProperties {
         this.rpcmessagedefaultcontent = rpcmessagedefaultcontent;
     }
 
+    public String getRpcroutingKeyname() {
+        return rpcroutingKeyname;
+    }
+
+    public void setRpcroutingKeyname(String rpcroutingKeyname) {
+        this.rpcroutingKeyname = rpcroutingKeyname;
+    }
+
+    public String getRpcexchangename() {
+        return rpcexchangename;
+    }
+
+    public void setRpcexchangename(String rpcexchangename) {
+        this.rpcexchangename = rpcexchangename;
+    }
+    
     public String getOperationheader() {
         return operationheader;
     }
