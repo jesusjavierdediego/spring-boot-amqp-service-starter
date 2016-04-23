@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
@@ -31,8 +32,9 @@ public abstract class AMQPMessageHandlerServiceAbstract {
         List<?> result = new ArrayList();
         try {
             Class<?> handlerClass = ClassUtils.forName(aMQPServiceProperties.getHandlerclassname(), getClass().getClassLoader());
-            Method handleRPCIncomingMessage = ReflectionUtils.findMethod(handlerClass, HANDLER_METHOD_NAME);
-            Object[] args = new Object[2];
+            Object handlerObject = handlerClass.newInstance();
+            Method handleRPCIncomingMessage = ReflectionUtils.findMethod(handlerClass, HANDLER_METHOD_NAME, new Class[]{byte[].class});
+            Object[] args = new Object[1]; 
             args[0] = message;
             result = (List<?>) ReflectionUtils.invokeMethod(handleRPCIncomingMessage, null, args);
             latch.await();
