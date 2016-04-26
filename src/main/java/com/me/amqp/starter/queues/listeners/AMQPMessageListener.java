@@ -3,6 +3,7 @@ package com.me.amqp.starter.queues.listeners;
 
 import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
 import com.me.amqp.starter.services.AMQPMessageHandlerServiceAbstract;
+import com.me.amqp.starter.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Map;
@@ -29,6 +30,9 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
     @Autowired
     RabbitTemplate replySender;
     
+    @Autowired
+    Utils utils;
+    
     
     private AMQPServiceProperties configuration;
 
@@ -43,19 +47,10 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
     public void onMessage(Message message, Channel channel) throws Exception{
         LOGGER.info("[Receiver] Principal received: {}", message.getBody());
         
-        /*
-         * Getting information from headers
-         * 1-Channel
-         * 2-Operation type
-        */
-        Map<String, Object> headers = message.getMessageProperties().getHeaders();
-        Entry opHeader = headers.entrySet().parallelStream().filter(e -> e.getKey().equalsIgnoreCase(configuration.getOperationheader())).findFirst().get();
-        Entry clientChannel = headers.entrySet().parallelStream().filter(e -> e.getKey().equalsIgnoreCase(configuration.getChannelheader())).findFirst().get();
-        
         LOGGER.info("******************************************************************");
         LOGGER.info("Message received at: ", message.getMessageProperties().getTimestamp());
-        LOGGER.info("Message for operation: {}. ", opHeader.getValue());
-        LOGGER.info("Message in channel: {}. ", clientChannel.getValue());
+        LOGGER.info("Message for operation: {}. ", utils.getOperationHeaderValueFromMessage(message.getMessageProperties().getHeaders()).getValue());
+        LOGGER.info("Message in channel: {}. ", utils.getChannelHeaderValueFromMessage(message.getMessageProperties().getHeaders()).getValue());
         
         //Invoke message handler
         List<?> result = messageHandler.invokeHandler(message);

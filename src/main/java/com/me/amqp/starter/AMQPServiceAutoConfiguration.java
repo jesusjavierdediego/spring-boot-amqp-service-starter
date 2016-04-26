@@ -3,7 +3,7 @@ package com.me.amqp.starter;
 import com.me.amqp.starter.queues.configurators.AMQPMessageConfiguration;
 import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
 import com.me.amqp.starter.queues.listeners.AMQPMessageListener;
-import com.me.amqp.starter.rpc.clients.AMQPRPCClient;
+import com.me.amqp.starter.rpc.clients.AMQPRPCSimpleClient;
 import com.me.amqp.starter.rpc.servers.AMQPRPCMainServer;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +35,8 @@ public class AMQPServiceAutoConfiguration {
 	}
         
         @Bean
-	public AMQPRPCClient aMQPRPCClient() throws Exception{
-		return new AMQPRPCClient(connectionFactory, aMQPServiceProperties);
+	public AMQPRPCSimpleClient aMQPRPCClient() throws Exception{
+		return new AMQPRPCSimpleClient(connectionFactory, aMQPServiceProperties);
 	}
         
         @Bean

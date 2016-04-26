@@ -32,6 +32,10 @@ public class AMQPServiceProperties {
         private String operationheader;
         private String channelheader;
         
+        private String RPCResponseTimeout;
+        
+       private String  rpcmessagedefaulterror;
+        
 
 
     public String getRpcqueuename() {
@@ -217,4 +221,21 @@ public class AMQPServiceProperties {
     public void setChannelheader(String channelheader) {
         this.channelheader = channelheader;
     }
+
+    public String getRPCResponseTimeout() {
+        return RPCResponseTimeout;
+    }
+
+    public void setRPCResponseTimeout(String rPCResponseTimeout) {
+        this.RPCResponseTimeout = rPCResponseTimeout;
+    } 
+
+    public String getRpcmessagedefaulterror() {
+        return rpcmessagedefaulterror;
+    }
+
+    public void setRpcmessagedefaulterror(String rpcmessagedefaulterror) {
+        this.rpcmessagedefaulterror = rpcmessagedefaulterror;
+    }
+    
 }
