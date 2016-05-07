@@ -5,7 +5,8 @@ import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
 import com.me.amqp.starter.queues.listeners.AMQPMessageListener;
 import com.me.amqp.starter.rpc.clients.AMQPRPCSimpleClient;
 import com.me.amqp.starter.rpc.servers.AMQPRPCMainServer;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import com.me.amqp.starter.services.AMQPRPCDeliveryHandlerServiceAbstract;
+//import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
@@ -13,6 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import com.rabbitmq.client.ConnectionFactory;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -22,21 +24,26 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(RabbitAutoConfiguration.class)
 public class AMQPServiceAutoConfiguration {
     
-       
-        @Autowired
-        private ConnectionFactory connectionFactory;
-        
+    
         @Autowired
 	AMQPServiceProperties aMQPServiceProperties;
         
+        @Autowired
+        AMQPRPCDeliveryHandlerServiceAbstract aMQPRPCDeliveryHandlerService;
+        
+        @Bean
+	public ConnectionFactory clientConnectionFactory() throws Exception{
+		return new ConnectionFactory();
+	}
+        
         @Bean
 	public AMQPRPCMainServer aMQPRPCMainServer() throws Exception{
-		return new AMQPRPCMainServer(connectionFactory, aMQPServiceProperties);
+		return new AMQPRPCMainServer(clientConnectionFactory(), aMQPRPCDeliveryHandlerService, aMQPServiceProperties);
 	}
         
         @Bean
 	public AMQPRPCSimpleClient aMQPRPCClient() throws Exception{
-		return new AMQPRPCSimpleClient(connectionFactory, aMQPServiceProperties);
+		return new AMQPRPCSimpleClient(clientConnectionFactory(), aMQPServiceProperties);
 	}
         
         @Bean
@@ -47,7 +54,5 @@ public class AMQPServiceAutoConfiguration {
         @Bean
 	public AMQPMessageListener aMQPMessageListener() {
 		return new AMQPMessageListener(aMQPServiceProperties);
-	}
-        
-        
+	}      
 }
