@@ -35,6 +35,7 @@ public class AMQPServiceProperties {
         private String RPCResponseTimeout;
         
        private String  rpcmessagedefaulterror;
+       private String  bindingName ;
         
 
 
@@ -237,5 +238,15 @@ public class AMQPServiceProperties {
     public void setRpcmessagedefaulterror(String rpcmessagedefaulterror) {
         this.rpcmessagedefaulterror = rpcmessagedefaulterror;
     }
+
+    public String getBindingName() {
+        return bindingName;
+    }
+
+    public void setBindingName(String bindingName) {
+        this.bindingName = bindingName;
+    }
+    
+    
     
 }

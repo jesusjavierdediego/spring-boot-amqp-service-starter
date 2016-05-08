@@ -12,7 +12,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 @Component
-public abstract class AMQPRPCDeliveryHandlerServiceAbstract {
+public abstract class AMQPRPCDeliveryHandlerServiceAbstract implements AMQPRPCDeliveryHandlerService{
 
     @Autowired
     AMQPServiceProperties aMQPServiceProperties;

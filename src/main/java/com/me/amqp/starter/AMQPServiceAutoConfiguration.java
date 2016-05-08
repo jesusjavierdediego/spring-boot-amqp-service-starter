@@ -5,6 +5,7 @@ import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
 import com.me.amqp.starter.queues.listeners.AMQPMessageListener;
 import com.me.amqp.starter.rpc.clients.AMQPRPCSimpleClient;
 import com.me.amqp.starter.rpc.servers.AMQPRPCMainServer;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
@@ -23,11 +24,14 @@ public class AMQPServiceAutoConfiguration {
         @Autowired
 	AMQPServiceProperties aMQPServiceProperties;
         
+        @Autowired
+	CachingConnectionFactory connectionFactory;
+        
         
 
         @Bean
 	public AMQPRPCMainServer aMQPRPCMainServer() throws Exception{
-		return new AMQPRPCMainServer();
+		return new AMQPRPCMainServer(connectionFactory);
 	}
         
         @Bean
