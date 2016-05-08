@@ -3,7 +3,7 @@ package com.me.amqp.starter.queues.configurators;
 import com.me.amqp.starter.queues.listeners.AMQPMessageListener;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -20,7 +20,7 @@ public class AMQPMessageConfiguration {
    
     
     @Autowired
-    private ConnectionFactory rabbitConnectionFactory;
+    private CachingConnectionFactory rabbitConnectionFactory;
     
     
     @Bean
@@ -47,7 +47,7 @@ public class AMQPMessageConfiguration {
     }
 
     @Bean
-    SimpleMessageListenerContainer listenContainer(ConnectionFactory connectionFactory, AMQPServiceProperties aMQPServiceProperties) {
+    SimpleMessageListenerContainer listenContainer(CachingConnectionFactory connectionFactory, AMQPServiceProperties aMQPServiceProperties) {
         final SimpleMessageListenerContainer listenerContainer = new SimpleMessageListenerContainer();
         listenerContainer.setConnectionFactory(connectionFactory);
         listenerContainer.setQueueNames(aMQPServiceProperties.getQueuename());
