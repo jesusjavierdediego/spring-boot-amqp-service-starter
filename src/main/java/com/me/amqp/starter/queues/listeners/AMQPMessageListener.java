@@ -2,12 +2,10 @@ package com.me.amqp.starter.queues.listeners;
 
 
 import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
-import com.me.amqp.starter.services.AMQPMessageHandlerServiceAbstract;
+import com.me.amqp.starter.services.AMQPDeliveryHandlerService;
 import com.me.amqp.starter.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.List;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Message;
@@ -15,6 +13,7 @@ import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,9 +23,10 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
     @Autowired
     MessageConverter jsonMessageConverter;
     
-    @Autowired
-    AMQPMessageHandlerServiceAbstract messageHandler;
-    
+//    @Autowired
+//    @Qualifier("aMQPDeliveryHandlerService")
+//    AMQPDeliveryHandlerService aMQPDeliveryHandlerService;
+//    
     @Autowired
     RabbitTemplate replySender;
     
@@ -40,7 +40,7 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
     
     @Autowired
     public AMQPMessageListener(AMQPServiceProperties aMQPServiceProperties){
-        configuration = aMQPServiceProperties;
+        this.configuration = aMQPServiceProperties;
     }
 
     @Override
@@ -52,8 +52,9 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
         LOGGER.info("Message for operation: {}. ", utils.getOperationHeaderValueFromMessage(message.getMessageProperties().getHeaders()).getValue());
         LOGGER.info("Message in channel: {}. ", utils.getChannelHeaderValueFromMessage(message.getMessageProperties().getHeaders()).getValue());
         
-        //Invoke message handler
-        List<?> result = messageHandler.invokeHandler(message);
+        
+        //List<?> result = aMQPDeliveryHandlerService.handleIncomingMessage(message);
+        List<?> result = null;
         try{
             if(result.size() > 0){
                 result.forEach(item -> replySender.convertAndSend(item));

@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AMQPServiceProperties {
 
 	private String rpcqueuename;
+        private String rpcreplyqueuename;
         private String rpcqueueisDurable;
         private String rpcqueueexclusive;
         private String rpcqueueautodelete;
@@ -45,6 +46,14 @@ public class AMQPServiceProperties {
 
     public void setRpcqueuename(String rpcqueuename) {
         this.rpcqueuename = rpcqueuename;
+    }
+
+    public String getRpcreplyqueuename() {
+        return rpcreplyqueuename;
+    }
+
+    public void setRpcreplyqueuename(String rpcreplyqueuename) {
+        this.rpcreplyqueuename = rpcreplyqueuename;
     }
 
     public String getRpcqueueisDurable() {
