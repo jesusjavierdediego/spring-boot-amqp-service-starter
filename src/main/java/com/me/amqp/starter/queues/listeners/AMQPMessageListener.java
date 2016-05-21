@@ -2,7 +2,6 @@ package com.me.amqp.starter.queues.listeners;
 
 
 import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
-import com.me.amqp.starter.services.AMQPDeliveryHandlerService;
 import com.me.amqp.starter.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +12,6 @@ import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,11 +20,7 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
     
     @Autowired
     MessageConverter jsonMessageConverter;
-    
-//    @Autowired
-//    @Qualifier("aMQPDeliveryHandlerService")
-//    AMQPDeliveryHandlerService aMQPDeliveryHandlerService;
-//    
+ 
     @Autowired
     RabbitTemplate replySender;
     
@@ -34,13 +28,13 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
     Utils utils;
     
     
-    private AMQPServiceProperties configuration;
+    private AMQPServiceProperties aMQPServiceProperties;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AMQPMessageListener.class);
     
     @Autowired
     public AMQPMessageListener(AMQPServiceProperties aMQPServiceProperties){
-        this.configuration = aMQPServiceProperties;
+        this.aMQPServiceProperties = aMQPServiceProperties;
     }
 
     @Override
@@ -48,9 +42,10 @@ public class AMQPMessageListener implements ChannelAwareMessageListener {
         LOGGER.info("[Receiver] Principal received: {}", message.getBody());
         
         LOGGER.info("******************************************************************");
+        LOGGER.info("FANOUT QUEUE");
         LOGGER.info("Message received at: ", message.getMessageProperties().getTimestamp());
-        LOGGER.info("Message for operation: {}. ", utils.getOperationHeaderValueFromMessage(message.getMessageProperties().getHeaders()).getValue());
-        LOGGER.info("Message in channel: {}. ", utils.getChannelHeaderValueFromMessage(message.getMessageProperties().getHeaders()).getValue());
+        LOGGER.info("Message with operation header value: {}. ", utils.getOperationHeaderValueFromMessage(message.getMessageProperties().getHeaders()).getValue());
+        LOGGER.info("Message with channel header value: {}. ", utils.getChannelHeaderValueFromMessage(message.getMessageProperties().getHeaders()).getValue());
         
         
         //List<?> result = aMQPDeliveryHandlerService.handleIncomingMessage(message);

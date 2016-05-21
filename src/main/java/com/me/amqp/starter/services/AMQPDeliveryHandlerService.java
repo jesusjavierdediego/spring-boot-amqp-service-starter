@@ -9,6 +9,6 @@ public interface AMQPDeliveryHandlerService {
     
     public List<?> invokeHandler(Message message);
     
-    public List<?> handleIncomingMessage(Message message);
+    public List<?> handleMessage(Message message);
     
 }

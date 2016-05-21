@@ -16,17 +16,17 @@ public class Utils {
     
     
     public Entry getOperationHeaderValueFromMessage(Map<String, Object> headers){
-        return headers.entrySet().parallelStream().filter(e -> e.getKey().equalsIgnoreCase(aMQPServiceProperties.getChannelheader())).findFirst().get();
+        return headers.entrySet().parallelStream().filter(e -> e.getKey().equalsIgnoreCase(aMQPServiceProperties.getChannelHeader())).findFirst().get();
     }
     
     public Entry getChannelHeaderValueFromMessage(Map<String, Object> headers){
-        return headers.entrySet().parallelStream().filter(e -> e.getKey().equalsIgnoreCase(aMQPServiceProperties.getOperationheader())).findFirst().get();
+        return headers.entrySet().parallelStream().filter(e -> e.getKey().equalsIgnoreCase(aMQPServiceProperties.getOperationHeader())).findFirst().get();
     }
     
-    public Map<String, Object>  getMessagePropertiesFromList(String opHeaderValue, String channelHeaderValue){
+    public Map<String, Object>  setMessagePropertiesIntoList(String opHeaderValue, String channelHeaderValue){
         Map<String, Object> props = new HashMap<>();
-        props.put(aMQPServiceProperties.getHeadersoperation(), opHeaderValue);
-        props.put(aMQPServiceProperties.getChannelheader(), channelHeaderValue);
+        props.put(aMQPServiceProperties.getOperationHeader(), opHeaderValue);
+        props.put(aMQPServiceProperties.getChannelHeader(), channelHeaderValue);
         return props;
     }
     
