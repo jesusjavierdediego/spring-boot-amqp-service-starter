@@ -11,9 +11,12 @@ public class AMQPServiceProperties {
     private String rpcQueueIsexclusive;
     private String rpcQueueIsautodelete;
     private String rpcQueueIsautoack;
-    private String rpcRoutingKeyname;
     private String rpcExchangeName;
     private String rpcBindingName;
+    private String rpcReplyTimeout;
+    private String rpcHandlerClassName;
+    private String rpcMessagedefaultContent;
+    private String rpcMessageDefaultError;
     
     private String topicQueueName;
     private String topicQueueisDurable;
@@ -21,22 +24,12 @@ public class AMQPServiceProperties {
     private String topicQueueIsAutodelete;
     private String topicExchangeName;
     private String topicBindingName;
-    
-    private String replytimeout;
-    private String replyQueueName;
-    
-    private String handlerClassName;
-    private String rpcHandlerClassName;
-    private String handlerClassMethodName;
-    private String rpcHandlerclassmethodName;
-    private String rpcMessagedefaultContent;
-    
+    private String topicHandlerClassName;
     
     private String operationHeader;
     private String channelHeader;
-    private String RPCResponseTimeout;
-    private String rpcMessageDefaultError;
     private String defaultEncoding;
+    
     
     
 
@@ -44,107 +37,180 @@ public class AMQPServiceProperties {
         return rpcQueueName;
     }
 
+    public void setRpcQueueName(String rpcQueueName) {
+        this.rpcQueueName = rpcQueueName;
+    }
+
     public String getRpcReplyQueueName() {
         return rpcReplyQueueName;
+    }
+
+    public void setRpcReplyQueueName(String rpcReplyQueueName) {
+        this.rpcReplyQueueName = rpcReplyQueueName;
     }
 
     public String getRpcQueueIsDurable() {
         return rpcQueueIsDurable;
     }
 
+    public void setRpcQueueIsDurable(String rpcQueueIsDurable) {
+        this.rpcQueueIsDurable = rpcQueueIsDurable;
+    }
+
     public String getRpcQueueIsexclusive() {
         return rpcQueueIsexclusive;
+    }
+
+    public void setRpcQueueIsexclusive(String rpcQueueIsexclusive) {
+        this.rpcQueueIsexclusive = rpcQueueIsexclusive;
     }
 
     public String getRpcQueueIsautodelete() {
         return rpcQueueIsautodelete;
     }
 
+    public void setRpcQueueIsautodelete(String rpcQueueIsautodelete) {
+        this.rpcQueueIsautodelete = rpcQueueIsautodelete;
+    }
+
     public String getRpcQueueIsautoack() {
         return rpcQueueIsautoack;
     }
 
-    public String getRpcRoutingKeyname() {
-        return rpcRoutingKeyname;
+    public void setRpcQueueIsautoack(String rpcQueueIsautoack) {
+        this.rpcQueueIsautoack = rpcQueueIsautoack;
     }
 
     public String getRpcExchangeName() {
         return rpcExchangeName;
     }
 
+    public void setRpcExchangeName(String rpcExchangeName) {
+        this.rpcExchangeName = rpcExchangeName;
+    }
+
     public String getRpcBindingName() {
         return rpcBindingName;
     }
 
-    public String getTopicQueueName() {
-        return topicQueueName;
+    public void setRpcBindingName(String rpcBindingName) {
+        this.rpcBindingName = rpcBindingName;
     }
 
-    public String getTopicQueueisDurable() {
-        return topicQueueisDurable;
+    public String getRpcReplyTimeout() {
+        return rpcReplyTimeout;
     }
 
-    public String getTopicQueueIsExclusive() {
-        return topicQueueIsExclusive;
-    }
-
-    public String getTopicQueueIsAutodelete() {
-        return topicQueueIsAutodelete;
-    }
-
-    public String getTopicExchangeName() {
-        return topicExchangeName;
-    }
-
-    public String getTopicBindingName() {
-        return topicBindingName;
-    }
-
-    public String getReplytimeout() {
-        return replytimeout;
-    }
-
-    public String getReplyQueueName() {
-        return replyQueueName;
-    }
-
-    public String getHandlerClassName() {
-        return handlerClassName;
+    public void setRpcReplyTimeout(String rpcReplytimeout) {
+        this.rpcReplyTimeout = rpcReplytimeout;
     }
 
     public String getRpcHandlerClassName() {
         return rpcHandlerClassName;
     }
 
-    public String getHandlerClassMethodName() {
-        return handlerClassMethodName;
+    public void setRpcHandlerClassName(String rpcHandlerClassName) {
+        this.rpcHandlerClassName = rpcHandlerClassName;
     }
 
-    public String getRpcHandlerclassmethodName() {
-        return rpcHandlerclassmethodName;
-    }
 
     public String getRpcMessagedefaultContent() {
         return rpcMessagedefaultContent;
     }
 
-    public String getOperationHeader() {
-        return operationHeader;
-    }
-
-    public String getChannelHeader() {
-        return channelHeader;
-    }
-
-    public String getRPCResponseTimeout() {
-        return RPCResponseTimeout;
+    public void setRpcMessagedefaultContent(String rpcMessagedefaultContent) {
+        this.rpcMessagedefaultContent = rpcMessagedefaultContent;
     }
 
     public String getRpcMessageDefaultError() {
         return rpcMessageDefaultError;
     }
 
+    public void setRpcMessageDefaultError(String rpcMessageDefaultError) {
+        this.rpcMessageDefaultError = rpcMessageDefaultError;
+    }
+
+    public String getTopicQueueName() {
+        return topicQueueName;
+    }
+
+    public void setTopicQueueName(String topicQueueName) {
+        this.topicQueueName = topicQueueName;
+    }
+
+    public String getTopicQueueisDurable() {
+        return topicQueueisDurable;
+    }
+
+    public void setTopicQueueisDurable(String topicQueueisDurable) {
+        this.topicQueueisDurable = topicQueueisDurable;
+    }
+
+    public String getTopicQueueIsExclusive() {
+        return topicQueueIsExclusive;
+    }
+
+    public void setTopicQueueIsExclusive(String topicQueueIsExclusive) {
+        this.topicQueueIsExclusive = topicQueueIsExclusive;
+    }
+
+    public String getTopicQueueIsAutodelete() {
+        return topicQueueIsAutodelete;
+    }
+
+    public void setTopicQueueIsAutodelete(String topicQueueIsAutodelete) {
+        this.topicQueueIsAutodelete = topicQueueIsAutodelete;
+    }
+
+    public String getTopicExchangeName() {
+        return topicExchangeName;
+    }
+
+    public void setTopicExchangeName(String topicExchangeName) {
+        this.topicExchangeName = topicExchangeName;
+    }
+
+    public String getTopicBindingName() {
+        return topicBindingName;
+    }
+
+    public void setTopicBindingName(String topicBindingName) {
+        this.topicBindingName = topicBindingName;
+    }
+
+    public String getTopicHandlerClassName() {
+        return topicHandlerClassName;
+    }
+
+    public void setTopicHandlerClassName(String topicHandlerClassName) {
+        this.topicHandlerClassName = topicHandlerClassName;
+    }
+
+    public String getOperationHeader() {
+        return operationHeader;
+    }
+
+    public void setOperationHeader(String operationHeader) {
+        this.operationHeader = operationHeader;
+    }
+
+    public String getChannelHeader() {
+        return channelHeader;
+    }
+
+    public void setChannelHeader(String channelHeader) {
+        this.channelHeader = channelHeader;
+    }
+
     public String getDefaultEncoding() {
         return defaultEncoding;
-    }  
+    }
+
+    public void setDefaultEncoding(String defaultEncoding) {
+        this.defaultEncoding = defaultEncoding;
+    }
+    
+    
+
+    
 }

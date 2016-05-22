@@ -1,9 +1,7 @@
 package com.me.amqp.starter.queues.configurators;
 
-import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
 import com.me.amqp.starter.services.AMQPRPCDeliveryHandlerService;
 import com.me.amqp.starter.utils.Utils;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AcknowledgeMode;
@@ -22,6 +20,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.util.ClassUtils;
 
 @Configuration
@@ -70,15 +69,15 @@ public class AMQPRPCConfiguration {
     }
 
     @Bean
-    @Qualifier("fixedReplyQRabbitTemplate")
-    public RabbitTemplate fixedReplyQRabbitTemplate() {
+    @Qualifier("rPCRabbitTemplate")
+    @Primary
+    public RabbitTemplate rPCRabbitTemplate() {
         RabbitTemplate template = new RabbitTemplate(rabbitConnectionFactory);
         template.setQueue(queue().getName());
         template.setExchange(aMQPServiceProperties.getRpcExchangeName());
         template.setRoutingKey(aMQPServiceProperties.getRpcBindingName());
         template.setReplyQueue(replyQueue());
-        template.setReplyTimeout(Long.valueOf(aMQPServiceProperties.getReplytimeout()));
-        template.setMessageConverter(jsonMessageConverter());
+        template.setReplyTimeout(Long.valueOf(aMQPServiceProperties.getRpcReplyTimeout()));
         return template;
     }
 
@@ -87,7 +86,7 @@ public class AMQPRPCConfiguration {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(rabbitConnectionFactory);
         container.setQueues(replyQueue());
-        container.setMessageListener(fixedReplyQRabbitTemplate());
+        container.setMessageListener(rPCRabbitTemplate());
         container.setAcknowledgeMode(AcknowledgeMode.AUTO);
         return container;
     }

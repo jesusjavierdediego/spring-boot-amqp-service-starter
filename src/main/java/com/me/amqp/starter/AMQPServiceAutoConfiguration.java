@@ -2,6 +2,7 @@ package com.me.amqp.starter;
 
 import com.me.amqp.starter.queues.configurators.AMQPRPCConfiguration;
 import com.me.amqp.starter.queues.configurators.AMQPServiceProperties;
+import com.me.amqp.starter.queues.configurators.AMQPTopicConfiguration;
 import com.me.amqp.starter.queues.listeners.AMQPMessageListener;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,9 +36,9 @@ public class AMQPServiceAutoConfiguration {
     public AMQPMessageListener aMQPMessageListener() {
         return new AMQPMessageListener(aMQPServiceProperties);
     }
-    
-//    @Bean
-//    public AMQPTopicConfiguration aMQPTopicConfiguration() throws Exception {
-//        return new AMQPTopicConfiguration(aMQPServiceProperties);
-//    }
+
+    @Bean
+    public AMQPTopicConfiguration aMQPTopicConfiguration() throws Exception {
+        return new AMQPTopicConfiguration();
+    }
 }
